@@ -1,3 +1,5 @@
+_credit to grok for assisting in formating this readme document_
+
 # Real-Time Network Performance Analytics Dashboard
 
 A professional real-time dashboard developed during my Bachelor's program to monitor and visualize network performance metrics.
@@ -26,18 +28,19 @@ A professional real-time dashboard developed during my Bachelor's program to mon
    cd real-time-network-analytics
    ```
 2. Create and activate virtual environment:
-   '''bash
+   ```bash
    python -m venv venv
    venv\Scripts\activate
-   '''
+   ```
 3. Install dependenciees:
-   '''bash
+   ```bash
    pip install fastapi uvicorn websockets sqlalchemy psutil pythonping
+   ```
 4. Install Ookla Speedtest CLI(Windows version)
 5. Run the backend:
-   '''bash
+   ```bash
    uvicorn app.main:app --reload --port 8000
-   '''
+   ```
 6. Open dashboard.html in your browser
 
 ## Project Structure
