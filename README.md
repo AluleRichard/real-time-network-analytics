@@ -59,6 +59,9 @@ network-dashboard/
 
 ## Screenshot
 
-[To be added later]
+![Network Performance Dashboard](images\metrics.png)
+![Network Performance Graph](images\graph.png)
+
+_Real-time gauges and trend charts showing live network metrics_
 
 Made with love as part of my Degree project
