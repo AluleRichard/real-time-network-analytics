@@ -34,7 +34,7 @@ A professional real-time dashboard developed during my Bachelor's program to mon
    ```
 3. Install dependenciees:
    ```bash
-   pip install fastapi uvicorn websockets sqlalchemy psutil pythonping
+   pip install -r requirements.txt
    ```
 4. Install Ookla Speedtest CLI(Windows version)
 5. Run the backend:
