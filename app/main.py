@@ -9,6 +9,8 @@ from app.models import NetworkMetric
 from app.schemas import NetworkMetricSchema
 from app.collector import collect_metrics
 from datetime import datetime, timezone
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 #logging 
 logging.basicConfig(level=logging.INFO)
@@ -70,6 +72,12 @@ app.add_middleware(
     allow_headers=["*"],
 )   
 
+app.mount("/static", StaticFiles(directory="."), name="static") 
+
+@app.get("/", response_class=FileResponse)
+async def serve_dashboard():
+    return FileResponse("dashboard.html")
+
 #REST endpoint - latest metrics 
 @app.get("/metrics/latest", response_model=NetworkMetricSchema)
 def get_latest_metrics(db: Session = Depends(get_db)):
@@ -82,6 +90,11 @@ def get_latest_metrics(db: Session = Depends(get_db)):
         timestamp=datetime.now(timezone.utc),
         packet_loss=0.0
     )  
+
+@app.get("/metrics/history", response_model=list[NetworkMetricSchema])
+def get_history(db: Session = Depends(get_db), limit: int = 50):
+    metrics = db.query(NetworkMetric).order_by(NetworkMetric.timestamp.desc()).limit(limit).all()
+    return metrics[::-1]  # reverse to chronological order
 
 #Websockets for real-time updates
 @app.websocket("/ws")  #unencrypted websocket for simplicity, will be changed to secure wss in production
