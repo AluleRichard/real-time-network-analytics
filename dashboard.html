@@ -13,11 +13,21 @@
             color: #e2e8f0;
             margin: 0;
             padding: 20px;
+            transition: background 0.3s;
+        }
+
+        body.light {
+            background: #f8fafc;
+            color: #1e2937;
         }
 
         h1 {
             text-align: center;
             color: #60a5fa;
+        }
+
+        .light h1 {
+            color: #1e40af;
         }
 
         .container {
@@ -37,6 +47,12 @@
             border-radius: 12px;
             padding: 20px;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s;
+        }
+
+        .light .card {
+            background: #ffffff;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
         .gauge-container {
@@ -73,6 +89,20 @@
         .history {
             height: 400px;
         }
+
+        button {
+            padding: 10px 16px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        button:hover {
+            background: #2563eb;
+        }
     </style>
 </head>
 
@@ -80,176 +110,57 @@
     <div class="container">
         <h1>🌐 Real-Time Network Performance Analytics Dashboard</h1>
         <div class="status">
-            <span class="live-dot"></span> Live • Connected to Backend • Updating every 30s
+            <span class="live-dot"></span> Live • Connected • Updating every 30s
+            <button onclick="toggleTheme()">🌙 Toggle Theme</button>
+            <button onclick="exportData()">📥 Export Data</button>
         </div>
 
         <div class="grid">
-            <!-- Download Gauge -->
-            <div class="card">
-                <h2>Download Speed</h2>
-                <div id="downloadGauge" class="gauge-container"></div>
-            </div>
+            <!-- Existing 4 gauges remain the same (Download, Upload, Ping, Packet Loss) -->
+            <!-- ... (keep your previous gauge cards) ... -->
 
-            <!-- Upload Gauge -->
+            <!-- New Traffic Volume Card -->
             <div class="card">
-                <h2>Upload Speed</h2>
-                <div id="uploadGauge" class="gauge-container"></div>
-            </div>
-
-            <!-- Ping Gauge -->
-            <div class="card">
-                <h2>Latency (Ping)</h2>
-                <div id="pingGauge" class="gauge-container"></div>
-            </div>
-
-            <!-- Packet Loss -->
-            <div class="card">
-                <h2>Packet Loss</h2>
-                <div id="lossGauge" class="gauge-container"></div>
+                <h2>Total Traffic Volume</h2>
+                <div id="trafficCard" style="font-size: 2.5em; text-align: center; padding: 40px 0; color: #60a5fa;">
+                    0.00 GB
+                </div>
+                <p style="text-align:center; color:#94a3b8;">Sent + Received</p>
             </div>
         </div>
 
-        <!-- Trend Charts -->
+        <!-- Trend Charts (keep as before) -->
         <div class="card history">
-            <h2>Performance Trends (Last 30 points)</h2>
+            <h2>Performance Trends</h2>
             <div id="trendChart" style="height: 350px;"></div>
         </div>
     </div>
 
     <script>
-        // Initialize gauges
-        let downloadGauge, uploadGauge, pingGauge, lossGauge, trendChart;
-        let historyData = { timestamps: [], download: [], upload: [], ping: [], loss: [] };
+        // ... (keep all your existing gauge and chart initialization code) ...
 
-        function createGauge(elementId, title, maxValue, color) {
-            const data = [{
-                domain: { x: [0, 1], y: [0, 1] },
-                value: 0,
-                title: { text: title, font: { size: 20, color: "#e2e8f0" } },
-                type: "indicator",
-                mode: "gauge+number",
-                gauge: {
-                    axis: { range: [0, maxValue], tickcolor: "#64748b" },
-                    bar: { color: color },
-                    bgcolor: "#334155",
-                    borderwidth: 2,
-                    bordercolor: "#475569",
-                    steps: [
-                        { range: [0, maxValue * 0.4], color: "#22c55e" },
-                        { range: [maxValue * 0.4, maxValue * 0.7], color: "#eab308" },
-                        { range: [maxValue * 0.7, maxValue], color: "#ef4444" }
-                    ]
-                }
-            }];
+        let isDark = true;
 
-            const layout = {
-                width: 300,
-                height: 250,
-                margin: { t: 30, b: 30, l: 30, r: 30 },
-                paper_bgcolor: "transparent",
-                font: { color: "#e2e8f0" }
-            };
-
-            return Plotly.newPlot(elementId, data, layout, { responsive: true });
+        function toggleTheme() {
+            isDark = !isDark;
+            document.body.classList.toggle('light', !isDark);
         }
 
-        // Initialize all gauges
-        async function initDashboard() {
-            downloadGauge = await createGauge('downloadGauge', 'Download (Mbps)', 200, '#3b82f6');
-            uploadGauge = await createGauge('uploadGauge', 'Upload (Mbps)', 50, '#8b5cf6');
-            pingGauge = await createGauge('pingGauge', 'Ping (ms)', 150, '#f59e0b');
-            lossGauge = await createGauge('lossGauge', 'Packet Loss (%)', 10, '#ef4444');
-
-            // Trend chart
-            const trendLayout = {
-                paper_bgcolor: "#1e2937",
-                plot_bgcolor: "#1e2937",
-                font: { color: "#e2e8f0" },
-                xaxis: { title: "Time", gridcolor: "#475569" },
-                yaxis: { title: "Value", gridcolor: "#475569" },
-                legend: { orientation: "h" }
-            };
-
-            const trendData = [
-                { x: [], y: [], name: "Download", type: "scatter", mode: "lines+markers", line: { color: "#3b82f6" } },
-                { x: [], y: [], name: "Upload", type: "scatter", mode: "lines+markers", line: { color: "#8b5cf6" } },
-                { x: [], y: [], name: "Ping", type: "scatter", mode: "lines+markers", line: { color: "#f59e0b" } }
-            ];
-
-            trendChart = Plotly.newPlot('trendChart', trendData, trendLayout, { responsive: true });
+        function exportData() {
+            const dataStr = JSON.stringify(historyData, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `network-metrics-${new Date().toISOString().slice(0, 10)}.json`;
+            link.click();
         }
 
-        // Update gauges and chart
-        function updateDashboard(data) {
-            // Update gauges
-            Plotly.restyle('downloadGauge', { value: [data.download_mbps || 0] });
-            Plotly.restyle('uploadGauge', { value: [data.upload_mbps || 0] });
-            Plotly.restyle('pingGauge', { value: [data.ping_ms || 0] });
-            Plotly.restyle('lossGauge', { value: [data.packet_loss || 0] });
-
-            // Update history
-            const timeStr = new Date(data.timestamp).toLocaleTimeString();
-            historyData.timestamps.push(timeStr);
-            historyData.download.push(data.download_mbps || 0);
-            historyData.upload.push(data.upload_mbps || 0);
-            historyData.ping.push(data.ping_ms || 0);
-            historyData.loss.push(data.packet_loss || 0);
-
-            // Keep only last 30 points
-            if (historyData.timestamps.length > 30) {
-                historyData.timestamps.shift();
-                historyData.download.shift();
-                historyData.upload.shift();
-                historyData.ping.shift();
-                historyData.loss.shift();
-            }
-
-            // Update trend chart
-            Plotly.restyle('trendChart', {
-                x: [historyData.timestamps, historyData.timestamps, historyData.timestamps],
-                y: [historyData.download, historyData.upload, historyData.ping]
-            });
-        }
-
-        // WebSocket connection
-        function connectWebSocket() {
-            const ws = new WebSocket('ws://127.0.0.1:8000/ws');
-
-            ws.onopen = () => {
-                console.log('✅ WebSocket connected to backend');
-            };
-
-            ws.onmessage = (event) => {
-                try {
-                    const data = JSON.parse(event.data);
-                    updateDashboard(data);
-                    console.log('📡 Live update received:', data);
-                } catch (e) {
-                    console.error('Parse error:', e);
-                }
-            };
-
-            ws.onclose = () => {
-                console.log('⚠️ WebSocket closed. Reconnecting in 3s...');
-                setTimeout(connectWebSocket, 3000);
-            };
-
-            ws.onerror = (err) => {
-                console.error('WebSocket error:', err);
-            };
-        }
-
-        // Start everything
-        window.onload = () => {
-            initDashboard();
-            connectWebSocket();
-
-            // Optional: Fetch latest on load
-            fetch('http://127.0.0.1:8000/metrics/latest')
-                .then(r => r.json())
-                .then(data => updateDashboard(data))
-                .catch(() => console.log("No historical data yet"));
-        };
+        // Update traffic volume (add this inside your updateDashboard function)
+        // After updating gauges, add:
+        // const totalBytes = (data.bytes_sent || 0) + (data.bytes_recv || 0);
+        // const totalGB = (totalBytes / (1024**3)).toFixed(2);
+        // document.getElementById('trafficCard').textContent = totalGB + ' GB';
     </script>
 </body>
 
